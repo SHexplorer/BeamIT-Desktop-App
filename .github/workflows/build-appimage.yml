@@ -1,0 +1,38 @@
+# This workflow will install create an AppImage of BeamIT-Desktop-App
+
+name: Build Linux AppImage
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y squashfs-tools libfuse2
+      - name: Checkout repo
+        uses: actions/checkout@master
+        with:
+          path: 'BeamIT-Desktop-App'
+          
+      - name: build
+        run: |
+          wget -c https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+          chmod +x appimage-builder-1.1.0-x86_64.AppImage
+          ./appimage-builder-1.1.0-x86_64.AppImage --recipe BeamIT-Desktop-App/AppImageBuilder.yml
+      - name: create pre-release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: True
+          tag: appimage-build
+          name: AppImage build
+          prerelease: True
+          artifacts: "BeamIT-Desktop-App-*.AppImage"
+          token: ${{ secrets.GITHUB_TOKEN }}   
+      
+        

@@ -1,0 +1,61 @@
+version: 1
+script:
+  # Remove any previous build
+  - rm -rf AppDir  | true
+  # Make usr and icons dirs
+  - mkdir -p AppDir/opt/beamit-desktop-app
+  # Copy the python application code into the AppDir
+  - cp BeamIT-Desktop-App/*  AppDir/opt/beamit-desktop-app -r
+  - mkdir -p AppDir/usr/share/icons
+  - cp BeamIT-Desktop-App/icon.png AppDir/usr/share/icons -r
+  # Install application dependencies
+  - python3 -m pip install --ignore-installed --prefix=/usr --root=AppDir requests PySide6 pyperclip
+
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: de.beamit.desktop-app
+    name: BeamIT-Desktop-App
+    icon: icon
+    version: 0.1.1
+    # Set the python executable as entry point
+    exec: usr/bin/python3
+    # Set the application main script path as argument. Use '$@' to forward CLI parameters
+    exec_args: "$APPDIR/opt/beamit-desktop-app/main.py $APPDIR/opt/beamit-desktop-app/"
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C'
+        #key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+
+    include:
+      - python3
+      - python3-pkg-resources
+      - python3-pip
+    exclude: []
+  
+  files:
+    exclude:
+      - opt/beamit-desktop-app/.git
+      - opt/beamit-desktop-app/.gitignore
+      - opt/beamit-desktop-app/BeamIT-Desktop-Install.iss
+      - opt/beamit-desktop-app/AppImageBuilder.yml
+      - opt/beamit-desktop-app/test_config.py
+
+  runtime:
+    env:
+      # Set python home
+      # See https://docs.python.org/3/using/cmdline.html#envvar-PYTHONHOME
+      PYTHONHOME: '${APPDIR}/usr'
+      # Path to the site-packages dir or other modules dirs
+      # See https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH
+      PYTHONPATH: '${APPDIR}/usr/lib/python3.10/site-packages'
+
+AppImage:
+  update-information: 'gh-releases-zsync|BeamIT|beamit-destkop-app|latest|beamit-destkop-app-*x86_64.AppImage.zsync'
+  sign-key: None
+  arch: x86_64
